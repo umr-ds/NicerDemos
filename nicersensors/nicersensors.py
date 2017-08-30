@@ -7,6 +7,33 @@ import pyserval
 
 targetnode = "7929BCAAA61F80ADD6227E04C477CAB96B5A7EE2BD965A7CC74105830B7C7465"
 targetnode = "CFF7493114DF7A9C0A3E07F960E6CF644ECF6AA62EB1787029CD7E130DD2B065"
+
+waiting = False
+status = False
+
+laststatus = ""
+
+def checkChat():
+    #print mysid, targetnode, client
+    global laststatus, waiting, status
+    client = pyserval.ServalRestClient("pum", "pum123")
+    if waiting:
+        print "checking messages"
+        msgs = client.meshms_fetch_list_messages(mysid, targetnode)        
+        for msg in msgs['rows']:
+            if msg[0] == '<' and msg[-3] == False:                
+                if msg[6].startswith("STATUS"):
+                    laststatus = msg[6]
+                    client.meshms_mark_all_read(mysid, targetnode)
+                    waiting = False
+                    if status:            
+                        app.infoBox("Status", laststatus)
+                        status = False                                            
+                    break
+        
+        #print laststatus
+        
+
 def pressSetNode(btn):
     pass
     #newsid = app.textBox("Set Node", "Target Node ID")    
@@ -17,6 +44,7 @@ def pressSetNode(btn):
 
 def showTplot(btn):
     all_journal = []
+    client = pyserval.ServalRestClient("pum", "pum123")
     for r in client.rhizome_list()["rows"]:        
         if r[2] == "SENSORLOG" and r[-1] == "temp_csv":
             if r[11] == targetnode:
@@ -44,6 +72,7 @@ def showTplot(btn):
 
 def showRplot(btn):
     all_journal = []
+    client = pyserval.ServalRestClient("pum", "pum123")
     for r in client.rhizome_list()["rows"]:        
         if r[2] == "SENSORLOG" and r[-1] == "rad_csv":
             if r[11] == targetnode:
@@ -63,6 +92,7 @@ def showRplot(btn):
 
 def showGmap(btn):
     coords = []
+    client = pyserval.ServalRestClient("pum", "pum123")
     for r in client.rhizome_list()["rows"]:        
         if r[2] == "SENSORLOG" and r[-1] == "gps_csv":
             if r[11] == targetnode:
@@ -77,8 +107,11 @@ def showGmap(btn):
     for lonlat in coords:
         app.setGoogleMapMarker("m1", lonlat)
     
-    app.setGoogleMapLocation("m1", lonlat)
-    
+    try:
+        app.setGoogleMapLocation("m1", lonlat)
+    except:
+        pass
+
     app.showSubWindow("gmapview")
 
 def pressDisplay(btn):
@@ -95,6 +128,9 @@ def pressDisplay(btn):
         print "unknown button"
 
 def pressControl(btn):
+    global waiting
+    global status
+
     if btn == "Apply":
         print "apply"
         sensorconfig = ""
@@ -108,11 +144,14 @@ def pressControl(btn):
         print mysid
         client.meshms_send_message(mysid, targetnode, "SETCONFIG " + sensorconfig)
     elif btn == "Refresh":
-        client.meshms_send_message(mysid, targetnode, "STATUS")
+        client.meshms_send_message(mysid, targetnode, "GETSTATUS")
+        waiting = True
         print "refresh"        
     elif btn == "Status":
         print "status"
-        client.meshms_send_message(mysid, targetnode, "STATUS")
+        client.meshms_send_message(mysid, targetnode, "GETSTATUS")
+        waiting = True
+        status = True
     else:
         print "unknown button"
 
@@ -124,7 +163,17 @@ for r in client.rhizome_list()["rows"]:
             print "BID", r[3]
             print client.rhizome_get_raw(r[3])
 
+#print mysid
+#for conversation in client.meshms_fetch_list_conversations(mysid)['rows']:    
+    #if conversation[2] == targetnode and conversation[3] == False:
+        #print conversation
+xxx = client.meshms_fetch_list_messages(mysid, targetnode)
+for yyy in xxx['rows']:
+    if yyy[0] == '<' and yyy[-3] == False:
+        print yyy[6]
 
+print xxx["header"]
+#sys.exit(1)
 app = gui()
 app.useTtk()
 app.setTitle("NICER Sensors")
@@ -166,4 +215,6 @@ app.addGoogleMap("m1")
 app.setGoogleMapSize("m1", "300x500")
 app.stopSubWindow()
 
+app.registerEvent(checkChat)
+app.setPollTime(1000)
 app.go()
