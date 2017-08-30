@@ -6,7 +6,7 @@ from appJar import gui
 import pyserval
 
 targetnode = "7929BCAAA61F80ADD6227E04C477CAB96B5A7EE2BD965A7CC74105830B7C7465"
-
+targetnode = "CFF7493114DF7A9C0A3E07F960E6CF644ECF6AA62EB1787029CD7E130DD2B065"
 def pressSetNode(btn):
     pass
     #newsid = app.textBox("Set Node", "Target Node ID")    
@@ -94,7 +94,30 @@ def pressDisplay(btn):
     else:
         print "unknown button"
 
+def pressControl(btn):
+    if btn == "Apply":
+        print "apply"
+        sensorconfig = ""
+        if app.getCheckBox("Radiation"):
+            sensorconfig += "-r "
+        if app.getCheckBox("Temperature"):
+            sensorconfig += "-t "
+        if app.getCheckBox("GPS Position"):
+            sensorconfig += "-g "
+        print sensorconfig
+        print mysid
+        client.meshms_send_message(mysid, targetnode, "SETCONFIG " + sensorconfig)
+    elif btn == "Refresh":
+        client.meshms_send_message(mysid, targetnode, "STATUS")
+        print "refresh"        
+    elif btn == "Status":
+        print "status"
+        client.meshms_send_message(mysid, targetnode, "STATUS")
+    else:
+        print "unknown button"
+
 client = pyserval.ServalRestClient("pum", "pum123")
+mysid = client.keyring_fetch()['rows'][0][0]
 for r in client.rhizome_list()["rows"]:
     if r[2] == "SENSORLOG" and r[-1] == "rad_csv":
         if r[11] == targetnode:
@@ -114,11 +137,11 @@ app.addLabel("lblNode", targetnode[0:6] + "*")
 app.addCheckBox("Temperature")
 app.addCheckBox("Radiation")
 app.addCheckBox("GPS Position")
-app.addButtons(["Apply" , "Refresh", "Status"], None)
+app.addButtons(["Apply" , "Refresh", "Status"], pressControl)
 #app.addButton("Status", None)
 app.addHorizontalSeparator()
 app.addLabel("lblDisplay", "Display Sensors")
-app.addButtons(["Temp", "Rad","Pos"], pressDisplay)
+app.addButtons(["Temp", "Rad", "Pos"], pressDisplay)
 #app.setLabelBg("title", "red")
 
 app.startSubWindow("tempview", modal=True)
