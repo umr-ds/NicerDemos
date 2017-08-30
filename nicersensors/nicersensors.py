@@ -34,11 +34,13 @@ def showTplot(btn):
     #y = numpy.array([3, 4, 5, 2, 2, 3, 5, 6, 8, 2])
 
 
-    app = gui()
-    app.setTitle("Temperature Plot")
-    axes = app.addPlot("p1", x, y)
-    axes.legend(['Temperature in C'])
-    app.go()
+    #app = gui()
+    #app.setTitle("Temperature Plot")
+    #axes = app.addPlot("p1", x, y)
+    #axes.legend(['Temperature in C'])
+    #app.go()
+    app.updatePlot("plottemp", x, y)
+    app.showSubWindow("tempview")
 
 def showRplot(btn):
     all_journal = []
@@ -54,13 +56,10 @@ def showRplot(btn):
     plotlen = min(len_aj, 10)
     x = numpy.arange(0.0, plotlen, 1.0)    
     y = numpy.array(all_journal[len_aj - plotlen : len_aj])
+    
+    app.updatePlot("plotrad", x, y)    
+    app.showSubWindow("radview")
 
-
-    app = gui()
-    app.setTitle("Radiation Plot")
-    axes = app.addPlot("p1", x, y)
-    axes.legend(['Radiation'])
-    app.go()
 
 def showGmap(btn):
     coords = []
@@ -71,16 +70,16 @@ def showGmap(btn):
                 for l in client.rhizome_get_raw(r[3]).split("\n"):
                     if len(l) > 1:
                         entry = l.split(" ")
-                        coords.append(entry[1] + "x" + entry[2])
-    #app = gui()
-    #app.addGoogleMap("m1")
-    #app.setGoogleMapSize("m1", "300x500")
-    #app.setGoogleMapLocation("m1", "50.816243449867386 8.813151035759148")
-    #app.setGoogleMapMarker("m1", "50.816243449867386 8.813151035759148")
-    #app.go()
-    #coords = ["50.816243449867386x8.813151035759148"]
-    print coords
-    os.system("python nicermap.py " + " ".join(coords))
+                        coords.append(entry[1] + " " + entry[2])
+    
+    print coords    
+    app.setGoogleMapMarker("m1", "")
+    for lonlat in coords:
+        app.setGoogleMapMarker("m1", lonlat)
+    
+    app.setGoogleMapLocation("m1", lonlat)
+    
+    app.showSubWindow("gmapview")
 
 def pressDisplay(btn):
     if btn == "Temp":
@@ -121,5 +120,27 @@ app.addHorizontalSeparator()
 app.addLabel("lblDisplay", "Display Sensors")
 app.addButtons(["Temp", "Rad","Pos"], pressDisplay)
 #app.setLabelBg("title", "red")
+
+app.startSubWindow("tempview", modal=True)
+x = numpy.arange(0.0, 10.0, 1.0)    
+y = numpy.array([3, 4, 5, 2, 2, 3, 5, 6, 8, 2])
+app.setTitle("Temperature Plot")
+axes = app.addPlot("plottemp", x, y)
+axes.legend(['Temperature in C'])
+app.stopSubWindow()
+
+app.startSubWindow("radview", modal=True)
+x = numpy.arange(0.0, 10.0, 1.0)    
+y = numpy.array([3, 4, 5, 2, 2, 3, 5, 6, 8, 2])
+app.setTitle("Radiation Plot")
+axes = app.addPlot("plotrad", x, y)
+axes.legend(['Radiation'])
+app.stopSubWindow()
+
+app.startSubWindow("gmapview", modal=True)
+app.setTitle("GPS Map")
+app.addGoogleMap("m1")
+app.setGoogleMapSize("m1", "300x500")
+app.stopSubWindow()
 
 app.go()
