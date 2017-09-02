@@ -68,6 +68,11 @@ def showTplot(btn):
     #axes.legend(['Temperature in C'])
     #app.go()
     app.updatePlot("plottemp", x, y)
+    taxes.legend(['Temperature in C'])
+    taxes.set_xlabel("Last samples")
+    taxes.set_ylabel("Degree C")
+    app.refreshPlot("plottemp")
+
     app.showSubWindow("tempview")
 
 def showRplot(btn):
@@ -87,6 +92,10 @@ def showRplot(btn):
     y = numpy.array(all_journal[len_aj - plotlen : len_aj])
     
     app.updatePlot("plotrad", x, y)    
+    raxes.legend(['Radiation'])
+    raxes.set_xlabel("Last samples")
+    raxes.set_ylabel("Clicks Per Minute")
+    app.refreshPlot("plotrad")
     app.showSubWindow("radview")
 
 
@@ -197,16 +206,20 @@ app.startSubWindow("tempview", modal=True)
 x = numpy.arange(0.0, 10.0, 1.0)    
 y = numpy.array([3, 4, 5, 2, 2, 3, 5, 6, 8, 2])
 app.setTitle("Temperature Plot")
-axes = app.addPlot("plottemp", x, y)
-axes.legend(['Temperature in C'])
+taxes = app.addPlot("plottemp", x, y)
+taxes.legend(['Temperature in C'])
+taxes.set_xlabel("Last samples")
+taxes.set_ylabel("Degree C")
 app.stopSubWindow()
 
 app.startSubWindow("radview", modal=True)
 x = numpy.arange(0.0, 10.0, 1.0)    
 y = numpy.array([3, 4, 5, 2, 2, 3, 5, 6, 8, 2])
 app.setTitle("Radiation Plot")
-axes = app.addPlot("plotrad", x, y)
-axes.legend(['Radiation'])
+raxes = app.addPlot("plotrad", x, y)
+raxes.legend(['Radiation'])
+raxes.set_xlabel("Last samples")
+raxes.set_ylabel("Clicks Per Minute")
 app.stopSubWindow()
 
 app.startSubWindow("gmapview", modal=True)
